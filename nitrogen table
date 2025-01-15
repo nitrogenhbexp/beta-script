@@ -1,26 +1,3 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local settings = {
-    RapidFire = {
-        Keybind = Enum.KeyCode.R,
-        Enabled = false,
-    },
-    Aimbot = {
-        Keybind = Enum.KeyCode.C,
-        Enabled = false,
-        Radius = 300,
-        HitPart = "Head",
-        LockedPlayer = nil,
-    },
-    Orbit = {
-        Keybind = Enum.KeyCode.V,
-        Active = false,
-        Notifications = false,
-        Adjust = 10,
-    },
-}
-
 local Functions = {}
 
 do
