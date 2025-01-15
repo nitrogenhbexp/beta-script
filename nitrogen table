@@ -1,0 +1,115 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local settings = {
+    RapidFire = {
+        Keybind = Enum.KeyCode.R,
+        Enabled = false,
+    },
+    Aimbot = {
+        Keybind = Enum.KeyCode.C,
+        Enabled = false,
+        Radius = 300,
+        HitPart = "Head",
+        LockedPlayer = nil,
+    },
+    Orbit = {
+        Keybind = Enum.KeyCode.V,
+        Active = false,
+        Notifications = false,
+        Adjust = 10,
+    },
+}
+
+local Functions = {}
+
+do
+    function Functions:IsAlive(Player)
+        if Player and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChild("Humanoid") and Player.Character.Humanoid.Health > 0 then
+            return true
+        end
+        return false
+    end
+
+    function Functions:GetClosestToMouse()
+        local Closest, Part = settings.Aimbot.Radius, nil
+        
+        for _, Player in Players:GetPlayers() do
+            if Player ~= LocalPlayer and Functions:IsAlive(Player) then
+                local HitPart = Player.Character:FindFirstChild(settings.Aimbot.HitPart)
+
+                if HitPart then
+                    local ScreenPosition, OnScreen = CurrentCamera:WorldToViewportPoint(HitPart.Position)
+                    local Distance = (UserInputService:GetMouseLocation() - Vector2.new(ScreenPosition.X, ScreenPosition.Y)).Magnitude
+
+                    if OnScreen and Distance <= Closest then
+                        Closest = Distance
+                        Part    = HitPart
+                    end
+                end
+            end
+        end
+        
+        return Part
+    end
+end
+
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.KeyCode == settings.Aimbot.Keybind then
+        if not settings.Aimbot.Enabled then
+            settings.Aimbot.Enabled = true
+        else
+            settings.Aimbot.Enabled = false
+            settings.Aimbot.LockedPlayer = nil
+        end
+    end
+
+    if Input.KeyCode == settings.RapidFire.Keybind then
+        settings.RapidFire.Enabled = not settings.RapidFire.Enabled
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if not settings.Aimbot.Enabled then
+        return
+    end
+
+    local HitPart = nil
+    if settings.Aimbot.LockedPlayer then
+        if settings.Aimbot.LockedPlayer.Character and Functions:IsAlive(settings.Aimbot.LockedPlayer) then
+            HitPart = settings.Aimbot.LockedPlayer.Character:FindFirstChild(settings.Aimbot.HitPart)
+        else
+            settings.Aimbot.LockedPlayer = nil
+        end
+    end
+
+    if not HitPart then
+        HitPart = Functions:GetClosestToMouse()
+        if HitPart then
+            local TargetPlayer = game:GetService("Players"):GetPlayerFromCharacter(HitPart.Parent)
+            settings.Aimbot.LockedPlayer = TargetPlayer
+        end
+    end
+
+    if HitPart then
+        CurrentCamera.CFrame = CFrame.new(CurrentCamera.CFrame.Position, HitPart.Position)
+    end
+end)
+
+while true do
+    task.wait()
+    if settings.RapidFire.Enabled then
+        local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        if tool and tool:FindFirstChild("GunScript") then
+            for _, v in ipairs(getconnections(tool.Activated)) do
+                local funcinfo = debug.getinfo(v.Function)
+                for i = 1, funcinfo.nups do
+                    local c, n = debug.getupvalue(v.Function, i)
+                    if type(c) == "number" then
+                        debug.setupvalue(v.Function, i, 0.00000000000000000001)
+                    end
+                end
+            end
+        end
+    end
+end
